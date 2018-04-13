@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+
+    <!-- Basic Page Needs–––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <meta charset="utf-8">
+    <title>TD Viewer</title>
+    <meta name="description" content="">
+    <meta name="author" content="Daniel Hey">
+
+    <!-- CSS–––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <link rel="stylesheet" href="css/skeleton.css">
+    <link rel="stylesheet" href="css/dygraph.css">
+    
+    <!-- Scripts–––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <script type="text/javascript" src="js/dygraph.min.js"></script>
+    <script type="text/javascript" src="js/utils.js"></script>
+    <script type="text/javascript" src="js/math.js"></script>
+    <script type="text/javascript" src="js/bessel.js"></script>
+    <script type="text/javascript" src="js/conversions.js"></script>
+    <script type="text/javascript" src="js/jquery-3.1.1.min.js"></script>
+    <script type="text/javascript" src="js/forwardperiastron.js"></script>
+    <script type="text/javascript" src="js/orbitcalculator.js"></script>
+    
+    <!-- Favicon  -->
+    <link rel="icon" type="image/jpg" href="css/icon.jpg">
+    
+</head>
+
+<body>
+  <!-- Primary Page Layout–––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+<div class="row">
+<div class="three columns">
+
+<div class="row">
+	<div class="eight columns"><h5>Binary system TD</h5></div>
+    
+    <div class="two columns">
+	  <a class="btn" href="#open-modalHelp">Help</a>
+	  <div id="open-modalHelp" class="modal-window">
+			<div>
+			<a href="#modal-close" title="Close" class="modal-close">Close</a>
+			<p>
+        Graphs the theoretical light arrival time delays and radial velocities of pulsators in binary systems, given supplied variables. If the periastron is supplied as BJD, then the range of dates over which to calculate is also required.
+        </p>
+                
+            <p>
+            Controls: Highlight region of graph to zoom in, double click to reset.
+                </p>
+			</div>
+		</div>
+	</div>
+    
+	<div class="two columns">
+	  <a class="btn" href="#open-modal">About</a>
+	  <div id="open-modal" class="modal-window">
+			<div>
+			<a href="#modal-close" title="Close" class="modal-close">Close</a>
+                <h1>About</h1> 
+			<p>TD Viewer is a short javascript program that can calculate theoretical light arrival time delays and radial velocities of pulsators in binary systems,
+				written by Daniel Hey (danielhey at outlook) and Dr. Simon Murphy, 2017 </p>
+			<p> Based on the papers by Murphy S. and Shibahashi H., <i><a href="https://arxiv.org/abs/1607.07879">Finding binaries from phase modulation of pulsating stars with Kepler. IV. Detection limits and radial velocity verification,</a></i> 2016, </p>
+			<p>
+			and <i><a href="https://arxiv.org/abs/1504.05098">Deriving the orbital properties of pulsators in binary systems through
+			their light arrival time delays, </a></i> 2015.
+			</p>
+			
+			<p>TD Viewer makes use of the excellent <a href="https://github.com/dhg/Skeleton">skeleton CSS framework</a>, and the <a href="http://dygraphs.com/">Dygraphs charting library.</a></p>
+                
+            <img class="rotate" src="css/icon.jpg" height="42" width="42">
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Send in the tabs -->
+<ul class="tab">
+  <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'plotTab')" id="defaultOpen">Plotting tools</a></li>
+  <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'orbitTab')">Orbital calculator</a></li>
+</ul>
+
+<div id="plotTab" class="tabcontent">
+	<div class="row">
+		<fieldset class="u-full-width"><legend><i>Presets</i></legend>
+			<div class="seven columns">
+				<select class="u-full-width" id="presetSelect">
+					<option value="1">KIC9651065</option>
+				</select>
+			</div>
+			<div class="five columns">
+				<button class="u-full-width" id="danbutton">Set</button>
+			</div>    
+        </fieldset>
+	</div>
+        
+        
+	<fieldset class="u-full-width"><legend><i>Variables</i> </legend>
+            
+		<div class="row">
+			<div class="three columns">
+			  <label for="phip" class="u-full-width">Periastron:</label>
+			</div>
+			<div class="four columns">
+			  <input class="u-full-width" type="range" placeholder="0" id="phipSlider" onchange="setValue('phipSlider','phip')" min="0" max="1" step="0.01">
+			</div>
+			<div class="three columns">
+			  <input class="u-full-width" type="number" placeholder="0" id="phip"  value="0.623749" onchange="updatePlots(); 
+                                                                                                              setValue('phip','phipSlider')" min="0" max="1" step="0.01">
+			</div>
+			<div class="two columns">
+				<select class="u-full-width" id="phipUnits" onchange="$('#bjdDropDown').toggle(300);
+                                                                      rangeChange(this);">
+					<option value="1">phase</option>
+                    <option value="2">BJD</option>
+				</select>
+			</div>
+		</div>
+        
+        
+        
+        <div id="bjdDropDown">
+            <hr>
+        <div class="row">
+			<div class="five columns">
+			  <label for="phip" class="u-full-width">Start of graph (BJD):</label>
+			</div>
+			<div class="seven columns">
+			  <input class="u-full-width" type="number" placeholder="" value="58000" id="bjdStart" onchange="updatePlots();">
+			</div>
+		</div>
+            
+        <div class="row">
+			<div class="five columns">
+			  <label for="phip" class="u-full-width">End of graph (BJD):</label>
+			</div>
+			<div class="seven columns">
+			  <input class="u-full-width" type="number" placeholder="0" value="59000" id="bjdEnd" onchange="updatePlots();">
+			</div>
+		</div>
+            <hr>
+            </div>
+        
+            
+		<div class="row">
+			<div class="three columns">
+			  <label for="a1sini" class="u-full-width">Semimajor axis:</label>
+			</div>
+			<div class="four columns">
+			  <input class="u-full-width" type="range" placeholder="0" id="a1siniSlider" onchange="setValue('a1siniSlider','a1sini')" min="0" max="500" step="1">
+			</div>
+			<div class="three columns">
+			  <input class="u-full-width" type="number" placeholder="0" id="a1sini"  value="184.56" onchange="updatePlots(); setValue('a1sini','a1siniSlider')" min="0" max="1000" step="1">
+			</div>
+			<div class="two columns">
+				<select class="u-full-width" id="a1siniUnits">
+					<option value="1">ls</option>
+					<option value="2">au</option>
+				</select>
+			</div>
+		</div>
+            
+		<div class="row">
+			<div class="three columns">
+			  <label for="varpi" class="u-full-width">Varpi:</label>
+			</div>
+			<div class="four columns">
+			  <input class="u-full-width" type="range" placeholder="0" id="varpiSlider" onchange="setValue('varpiSlider','varpi')">
+			</div>
+			<div class="three columns">
+			  <input class="u-full-width" type="number" placeholder="0" id="varpi"  value="2.198662" onchange="updatePlots(); setValue('varpi','varpiSlider')" min="0" max="1000" step="0.1">
+			</div>
+			<div class="two columns">
+				<select class="u-full-width" id="varpiUnits">
+					<option value="1">rad</option>
+					<option value="2">deg</option>
+				</select>
+			</div>
+		</div>
+            
+		<div class="row">
+			<div class="three columns">
+			  <label for="eccentricity" class="u-full-width">Eccentricity:</label>
+			</div>
+			<div class="four columns">
+			  <input class="u-full-width" type="range" placeholder="0" id="eccentricitySlider" onchange="setValue('eccentricitySlider','eccentricity')" min="0" max="0.999" step="0.01" >
+			</div>
+			<div class="three columns">
+			  <input class="u-full-width" type="number" placeholder="0" id="eccentricity" value="0.466711" min="0.0001" max="1.0" step="0.01" onchange="updatePlots(); setValue('eccentricity','eccentricitySlider')">
+			</div>
+			<div class="two columns">
+			</div>
+		</div>
+            
+		<hr>
+            
+		<div class="row">
+			<div class="three columns">
+			  <label for="period" class="u-full-width">Orbital period:</label>
+			</div>
+			<div class="four columns">
+			  <input class="u-full-width" type="range" placeholder="0" id="periodSlider" onchange="setValue('periodSlider','period'); updateEta();" min="0" max="1000" step="1">
+			</div>
+			<div class="three columns">
+			  <input class="u-full-width" type="number" placeholder="0" id="period" value="245.0" step="1" onchange="updatePlots(); updateEta(); setValue('period','periodSlider')">
+			</div>
+			<div class="two columns">
+				<select class="u-full-width" id="periodUnits">
+					<option value="1">day</option>
+					<option value="2">yr</option>
+				</select>
+			</div>
+		</div>
+            
+		<div class="row">
+			<div class="three columns">
+			  <label for="sampling" class="u-full-width">Sampling:</label>
+			</div>
+			<div class="four columns">
+			  <input class="u-full-width" type="range" placeholder="0" id="samplingSlider" onchange="setValue('samplingSlider','sampling'); updateEta();" min="0" max="1000" step="1">
+			</div>
+			<div class="three columns">
+			  <input class="u-full-width" type="number" placeholder="0" id="sampling" value="10.0" step="1" onchange="updatePlots(); updateEta(); setValue('sampling','samplingSlider')">
+			</div>
+			<div class="two columns">
+				<select class="u-full-width" id="samplingUnits">
+					<option value="1">day</option>
+					<option value="2">yr</option>
+				</select>
+			</div>
+		</div>
+            
+		<div class="row">
+			<div class="seven columns">
+			  <label for="etavalue" class="u-full-width">Current eta value:</label>
+			</div>
+			<div class="five columns">
+			  <input class="u-full-width" type="number" id="etavalue" disabled = "true" value="0.0408">
+			</div>
+		</div>
+            
+   </fieldset>
+        
+	<fieldset class="u-full-width"><legend><i>Plot options</i></legend>
+		<div class="row">
+			<div class="five columns">
+				<label for="points">Number of points:</label>
+			</div>
+			<div class="four columns">
+			  <input class="u-full-width" type="range" placeholder="0" id="pointsSlider" onchange="setValue('pointsSlider','points')">
+			</div>
+			<div class="three columns">
+				<input class="u-full-width" type="number" placeholder="0" id="points" value="50" onchange="updatePlots()">
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="nine columns">
+				<label for="exampleEmailInput">Enable auto-plotting?</label>
+			</div>
+			<div class="three columns">
+			  <input type="checkbox" id="autoplotCheck" checked="checked">
+			</div>
+		</div>
+        
+        <!--
+        <div class="row">
+			<div class="nine columns">
+				<label for="exampleEmailInput">Highlight periastra?</label>
+			</div>
+			<div class="three columns">
+			  <input type="checkbox" id="annotPeriastra" checked="checked">
+			</div>
+		</div>
+        -->
+	</fieldset>
+    
+    <div class="row">
+            <div class="six columns">
+                <button class="u-full-width" id="saveCSV">Save CSV</button>
+            </div>
+            <div class="six columns">
+                <button class="u-full-width" id="updatePlot">Plot</button>
+            </div>
+        </div>
+</div>
+
+<div id="orbitTab" class="tabcontent">
+    <div class="row">
+			<div class="five columns">
+			  <label for="starMass1" class="u-full-width">Mass (star 1):</label>
+			</div>
+			<div class="four columns">
+			  <input class="u-full-width" type="number" placeholder="0" id="starMass1"  onchange="orbitCalcCheck();">
+			</div>
+			<div class="three columns">
+				<select class="u-full-width" id="phipUnits">
+					<option value="1">Solar masses</option>
+				</select>
+			</div>
+		</div>
+    
+    <div class="row">
+			<div class="five columns">
+			  <label for="starMass2" class="u-full-width">Mass (star 2):</label>
+			</div>
+			<div class="four columns">
+			  <input class="u-full-width" type="number" placeholder="0" id="starMass2"  onchange="orbitCalcCheck();">
+			</div>
+			<div class="three columns">
+				<select class="u-full-width" id="phipUnits">
+					<option value="1">Solar masses</option>
+				</select>
+			</div>
+		</div>
+    
+    <div class="row">
+			<div class="five columns">
+			  <label for="orbitPeriod" class="u-full-width">Orbital period</label>
+			</div>
+			<div class="four columns">
+			  <input class="u-full-width" type="number" placeholder="0" id="periodParam" onchange="orbitCalcCheck();">
+			</div>
+			<div class="three columns">
+                <label>d</label>
+			</div>
+		</div>    
+    
+        <label class="u-full-width">Auto-calculate? <input type="checkbox" id="autocalcCheck" checked="checked"></label>
+        <button class="u-full-width" id="calculateParam">Calculate</button>
+    
+    <table style="width:100%" id='orbitParamTable'>
+      <tr>
+        <th>Parameter</th>
+        <th>Value</th> 
+      </tr>
+        <tr>
+        <td>a (ls)</td>
+        <td></td> 
+      </tr>
+      <tr>
+        <td>a1 (ls)</td>
+        <td></td> 
+      </tr>
+        <tr>
+        <td>a2 (ls)</td>
+        <td></td> 
+      </tr>
+      <tr>
+        <td>Mass function (SM)</td>
+        <td></td> 
+      </tr>
+        <tr>
+        <td>Mass function (kg)</td>
+        <td></td> 
+      </tr>
+        <tr>
+        <td>Mass function (orbit)</td>
+        <td></td> 
+      </tr>
+    </table>
+</div>    
+</div>
+    
+<div class="nine columns">
+	<div id="content"></div>
+</div>
+
+</div>
+
+<!-- Scripts! ––––––––––––––––––––––––––––––––––––––––––––––––––-->
+<script>
+
+//Global variables for storing all our data
+var phase = [[0,0,0]];
+        
+//handy array of inputs and their units THIS IS SUPERSEDED BY getByClassId function!
+var inputID = ["phip", "a1sini", "varpi", "eccentricity", "period", "sampling"];
+var selectID = ["phipUnits", "a1siniUnits", "varpiUnits", "periodUnits", "samplingUnits"];
+var sliderID = ["phipSlider", "a1siniSlider", "varpiSlider", "eccentricitySlider", "periodSlider", "samplingSlider"];
+
+//Called when the program first opens
+window.onload = function() {
+    //Open first tab
+    document.getElementById("defaultOpen").click()
+    
+    //hide BJD dropdowns
+    $("#bjdDropDown").hide();
+    
+    //digitsAfterDecimal 
+	//Instantiate the chart and bind it to content html
+    g = new Dygraph(document.getElementById("content"), phase,
+                {legend: "always",
+                showRangeSelector: true,
+                 animatedZooms: true,
+                interactionModel: Dygraph.defaultInteractionModel,
+                labels: [ 'X', 'Time delay', 'Radial velocity' ],
+                xlabel: 'Orbital phase',
+                ylabel: 'Time Delay (s)',
+                y2label: 'Radial Velocity (km/s)',
+                 labelsSeparateLines: true,
+                digitsAfterDecimal: 3, 
+                series : {
+                    'Radial velocity': {
+                        axis: 'y2',
+                        strokeWidth: 2,
+                    },
+                    'Time delay': {
+                        axis: 'y1',
+                        strokeWidth: 2,
+                    }, 
+                },
+                
+                 axes: {
+                     x: {
+                         valueFormatter: function(val) {
+                      return val.toFixed(3);
+                    },
+                },
+                      y2: {
+                        drawGrid: true,
+                        strokeWidth: 2,
+                        independentTicks: true,
+                        gridLinePattern: [2,2]
+                      },
+                    }
+                  })
+};
+    
+    
+    
+document.getElementById('updatePlot').addEventListener('click', function() {convertUnits();});
+
+document.getElementById('saveCSV').addEventListener('click', function() {saveToCSV();});
+    
+document.getElementById('calculateParam').addEventListener('click', function() { orbitCalc(); });
+
+document.getElementById('danbutton').addEventListener('click', function() {
+    
+    var presetArray = []
+    
+    switch(document.getElementById("presetSelect").value) {
+        case '1':
+            presetArray.push(0.623749, 184.56, 2.198662, 0.466711, 245.0, 10.0);
+            break;
+        case '2':
+            //presetArray.push([0.623749, 184.56, 2.198662, 0.466711, 245.0, 10.0]);
+            break;
+        default:
+            break;
+    } 
+    
+    for (var i = 0; i < inputID.length; i++) {
+        document.getElementById(inputID[i]).value = presetArray[i];
+        document.getElementById(sliderID[i]).value = presetArray[i];
+    }
+    for (var i = 0; i < selectID.length; i++) {
+        document.getElementById(selectID[i]).value = 1;
+    }
+    updatePlots();
+    updateEta();
+    $("#bjdDropDown").hide(250);
+});
+
+
+
+
+
+function updatePlots() {
+  var checkbox = document.getElementById('autoplotCheck');
+  if (checkbox.checked) {
+      convertUnits();
+  }
+}
+
+    
+function orbitCalcCheck() {
+    var checkbox = document.getElementById('autocalcCheck');
+    if (checkbox.checked) {
+        orbitCalc();
+    }
+}    
+    
+function orbitCalc() {
+    orbitCalculator(document.getElementById('starMass1').value,
+                   document.getElementById('starMass2').value,
+                   document.getElementById('periodParam').value);
+}
+</script>
+
+<!-- End Document
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+</body>
+</html>
